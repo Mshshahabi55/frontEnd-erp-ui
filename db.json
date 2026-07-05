@@ -51,24 +51,14 @@
       "createdAt": "2024-02-15T11:00:00Z"
     },
     {
-      "name": "mohammad shahabi",
+      "name": "Mohammad Shahabihamzekolahei",
       "email": "mshshahabi55@gmail.com",
-      "phone": "0449538728",
-      "company": "free",
+      "phone": "+358449538728",
+      "company": "free2",
       "address": "Palosaarentie",
       "isActive": true,
-      "createdAt": "2026-07-05T09:53:11.147Z",
-      "id": "SgO13susfRI"
-    },
-    {
-      "name": "bahareh",
-      "email": "bmahdavi2025@gmail.com",
-      "phone": "0035844958891",
-      "company": "TechCorp",
-      "address": "Abo Akademi University",
-      "isActive": true,
-      "createdAt": "2026-07-05T09:56:47.509Z",
-      "id": "iTWWVBUq51g"
+      "updatedAt": "2026-07-05T15:21:04.584Z",
+      "id": "P9HBga_AZ2k"
     }
   ],
   "products": [
@@ -136,13 +126,13 @@
       "name": "Mobile",
       "sku": "test",
       "category": "elctric",
-      "price": 2,
-      "stock": 1,
+      "price": 500,
+      "stock": 2,
       "unit": "set",
-      "description": "aa",
+      "description": "test",
       "isAvailable": false,
-      "createdAt": "2026-07-05T09:22:48.994Z",
-      "id": "OO4_cJS5qDs"
+      "updatedAt": "2026-07-05T15:19:14.972Z",
+      "id": "3HtFIcK94H4"
     }
   ],
   "orders": [],

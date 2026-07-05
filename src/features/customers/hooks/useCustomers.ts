@@ -11,7 +11,7 @@ export const customerKeys = {
   lists: () => [...customerKeys.all, 'list'] as const,
   list: (params?: CustomerQueryParams) => [...customerKeys.lists(), params] as const,
   details: () => [...customerKeys.all, 'detail'] as const,
-  detail: (id: number) => [...customerKeys.details(), id] as const,
+  detail: (id: string) => [...customerKeys.details(), id] as const,
 };
 
 // ============================================
@@ -32,7 +32,7 @@ export const useCustomers = (params?: CustomerQueryParams) => {
 /**
  * Get a single customer by ID
  */
-export const useCustomer = (id: number) => {
+export const useCustomer = (id: string) => {
   return useQuery({
     queryKey: customerKeys.detail(id),
     queryFn: () => customerService.getById(id),
@@ -70,7 +70,7 @@ export const useUpdateCustomer = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Customer> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<Customer> }) =>
       customerService.update(id, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: customerKeys.lists() });

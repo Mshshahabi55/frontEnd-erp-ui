@@ -60,7 +60,7 @@ export const ProductsPage = () => {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     const product = products.find((p) => p.id === id);
     if (product) {
       setSelectedProduct(product);

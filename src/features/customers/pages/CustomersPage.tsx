@@ -51,7 +51,7 @@ export const CustomersPage = () => {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     const customer = customers.find((c) => c.id === id);
     if (customer) {
       setSelectedCustomer(customer);

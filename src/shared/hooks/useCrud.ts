@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
-// ✅ تایپ برای پاسخ صفحه‌بندی شده
+// تایپ برای پاسخ صفحه‌بندی شده
 export interface PagedResponse<T> {
   data: T[];
   total: number;
@@ -10,13 +10,18 @@ export interface PagedResponse<T> {
   totalPages: number;
 }
 
-// ✅ تایپ CrudService با تایپ‌های عمومی
-export interface CrudService<T, CreateDto = any, UpdateDto = any> {
+// تایپ CrudService — نوع id از خودِ مدل (T['id']) گرفته می‌شود
+// تا با هر سرویسی (چه id عددی، چه رشته‌ای) سازگار باشد
+export interface CrudService<
+  T extends { id: string | number },
+  CreateDto = any,
+  UpdateDto = any
+> {
   getAll: (params?: any) => Promise<PagedResponse<T>>;
-  getById: (id: string | number) => Promise<T>;
+  getById: (id: T['id']) => Promise<T>;
   create: (data: CreateDto) => Promise<T>;
-  update: (id: string | number, data: UpdateDto) => Promise<T>;
-  delete: (id: string | number) => Promise<void>;
+  update: (id: T['id'], data: UpdateDto) => Promise<T>;
+  delete: (id: T['id']) => Promise<void>;
 }
 
 export function useCrud<T extends { id: string | number }, CreateDto = any, UpdateDto = any>(
@@ -32,7 +37,7 @@ export function useCrud<T extends { id: string | number }, CreateDto = any, Upda
     });
   };
 
-  const useGetById = (id: string | number) => {
+  const useGetById = (id: T['id']) => {
     return useQuery({
       queryKey: [...queryKey, 'detail', id],
       queryFn: () => service.getById(id),
@@ -55,7 +60,7 @@ export function useCrud<T extends { id: string | number }, CreateDto = any, Upda
 
   const useUpdate = () => {
     return useMutation({
-      mutationFn: ({ id, data }: { id: string | number; data: UpdateDto }) =>
+      mutationFn: ({ id, data }: { id: T['id']; data: UpdateDto }) =>
         service.update(id, data),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [...queryKey, 'list'] });
@@ -69,7 +74,7 @@ export function useCrud<T extends { id: string | number }, CreateDto = any, Upda
 
   const useDelete = () => {
     return useMutation({
-      mutationFn: (id: string | number) => service.delete(id),
+      mutationFn: (id: T['id']) => service.delete(id),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [...queryKey, 'list'] });
         toast.success('Item deleted successfully!');

@@ -52,7 +52,7 @@ export const productService = {
 
     const products: Product[] = response.data.data.map((p: any) => ({
       ...p,
-      id: Number(p.id),
+      id: String(p.id),
       price: Number(p.price),
       stock: Number(p.stock),
     }));
@@ -66,12 +66,11 @@ export const productService = {
     };
   },
 
-  async getById(id: string | number): Promise<Product> {
-    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    const response = await apiClient.get<Product>(/products/);
+  async getById(id: string): Promise<Product> {
+    const response = await apiClient.get<Product>(`/products/${id}`);
     return {
       ...response.data,
-      id: Number(response.data.id),
+      id: String(response.data.id),
     };
   },
 
@@ -82,24 +81,22 @@ export const productService = {
     });
     return {
       ...response.data,
-      id: Number(response.data.id),
+      id: String(response.data.id),
     };
   },
 
-  async update(id: string | number, data: UpdateProductDto): Promise<Product> {
-    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    const response = await apiClient.put<Product>(/products/, {
+  async update(id: string, data: UpdateProductDto): Promise<Product> {
+    const response = await apiClient.put<Product>(`/products/${id}`, {
       ...data,
       updatedAt: new Date().toISOString(),
     });
     return {
       ...response.data,
-      id: Number(response.data.id),
+      id: String(response.data.id),
     };
   },
 
-  async delete(id: string | number): Promise<void> {
-    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    await apiClient.delete(/products/);
+  async delete(id: string): Promise<void> {
+    await apiClient.delete(`/products/${id}`);
   },
 };

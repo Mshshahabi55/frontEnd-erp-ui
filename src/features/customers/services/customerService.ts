@@ -34,13 +34,13 @@ export const customerService = {
     const page = params?.page ?? 1;
     const limit = params?.limit ?? 10;
 
-    // ✅ ساخت پارامترها
+    // ساخت پارامترها
     const queryParams: Record<string, unknown> = {
       _page: page,
       _per_page: limit,
     };
 
-    // ✅ جستجو روی چند فیلد (name, email, company) هم‌زمان
+    // جستجو روی چند فیلد (name, email, company) هم‌زمان
     // json-server v1 دیگه از q= یا name_like پشتیبانی نمی‌کنه.
     // syntax درست: field:contains=value (case-insensitive)
     // برای OR روی چند فیلد باید از _where استفاده کرد.
@@ -56,8 +56,6 @@ export const customerService = {
       });
     }
 
-    console.log('🔍 Search params:', queryParams);
-
     const response = await apiClient.get<JsonServerPagedResponse<any>>(
       "/customers",
       {
@@ -65,11 +63,9 @@ export const customerService = {
       }
     );
 
-    console.log('📦 Response:', response.data);
-
     const customers: Customer[] = response.data.data.map((c: any) => ({
       ...c,
-      id: Number(c.id),
+      id: String(c.id),
     }));
 
     return {
@@ -81,13 +77,12 @@ export const customerService = {
     };
   },
 
-  async getById(id: string | number): Promise<Customer> {
-    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    const response = await apiClient.get<Customer>(`/customers/${numericId}`);
+  async getById(id: string): Promise<Customer> {
+    const response = await apiClient.get<Customer>(`/customers/${id}`);
 
     return {
       ...response.data,
-      id: Number(response.data.id),
+      id: String(response.data.id),
     };
   },
 
@@ -99,32 +94,30 @@ export const customerService = {
 
     return {
       ...response.data,
-      id: Number(response.data.id),
+      id: String(response.data.id),
     };
   },
 
   async update(
-    id: string | number,
+    id: string,
     data: UpdateCustomerDto
   ): Promise<Customer> {
-    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    const response = await apiClient.put<Customer>(`/customers/${numericId}`, {
+    const response = await apiClient.put<Customer>(`/customers/${id}`, {
       ...data,
       updatedAt: new Date().toISOString(),
     });
 
     return {
       ...response.data,
-      id: Number(response.data.id),
+      id: String(response.data.id),
     };
   },
 
-  async delete(id: string | number): Promise<void> {
-    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    await apiClient.delete(`/customers/${numericId}`);
+  async delete(id: string): Promise<void> {
+    await apiClient.delete(`/customers/${id}`);
   },
 
-  async toggleStatus(id: number): Promise<Customer> {
+  async toggleStatus(id: string): Promise<Customer> {
     const customer = await customerService.getById(id);
     return customerService.update(id, {
       isActive: !customer.isActive,
