@@ -26,23 +26,13 @@ export const CustomersPage = () => {
     Customer,
     CreateCustomerDto,
     UpdateCustomerDto
-  >(
-    customerService,
-    ['customers']
-  );
+  >(customerService, ['customers']);
 
   const { data: response, isLoading, error, refetch } = useGetAll({
     page: page + 1,
     limit: pageSize,
     search: debouncedSearch || undefined,
   });
-
-  // ✅ دیباگ: لاگ کردن داده‌ها
-  console.log('📊 Response:', response);
-  console.log('📊 Customers:', response?.data);
-  console.log('📊 Total:', response?.total);
-  console.log('📊 Loading:', isLoading);
-  console.log('📊 Error:', error);
 
   const customers = response?.data ?? [];
   const totalCount = response?.total ?? 0;
@@ -62,34 +52,24 @@ export const CustomersPage = () => {
   };
 
   const handleDelete = (id: number) => {
-    const customer = customers.find((c: Customer) => c.id === id);
+    const customer = customers.find((c) => c.id === id);
     if (customer) {
       setSelectedCustomer(customer);
       setIsDeleteOpen(true);
     }
   };
 
-  const handleFormSubmit = async (formData: CreateCustomerFormData) => {
+  const handleFormSubmit = async (data: CreateCustomerFormData) => {
     if (selectedCustomer) {
       await updateMutation.mutateAsync({
         id: selectedCustomer.id,
         data: {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          company: formData.company || undefined,
-          address: formData.address || undefined,
-          isActive: formData.isActive,
+          ...data,
         },
       });
     } else {
       await createMutation.mutateAsync({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        company: formData.company || undefined,
-        address: formData.address || undefined,
-        isActive: formData.isActive,
+        ...data,
       });
     }
     setIsFormOpen(false);
@@ -189,9 +169,7 @@ export const CustomersPage = () => {
       />
 
       <Dialog open={isFormOpen} onClose={() => setIsFormOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {selectedCustomer ? 'Edit Customer' : 'Add New Customer'}
-        </DialogTitle>
+        <DialogTitle>{selectedCustomer ? 'Edit Customer' : 'Add New Customer'}</DialogTitle>
         <DialogContent>
           <CustomerForm
             defaultValues={

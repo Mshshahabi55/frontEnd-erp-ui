@@ -11,14 +11,14 @@
       "createdAt": "2024-01-15T10:30:00Z"
     },
     {
-      "id": "2",
       "name": "Jane Smith",
       "email": "jane.smith@example.com",
       "phone": "+1987654321",
       "company": "TechCorp",
       "address": "456 Oak Avenue, Los Angeles, CA 90001",
-      "isActive": true,
-      "createdAt": "2024-01-20T14:45:00Z"
+      "isActive": false,
+      "updatedAt": "2026-07-05T09:52:18.387Z",
+      "id": "2"
     },
     {
       "id": "3",
@@ -49,6 +49,16 @@
       "address": "654 Maple Drive, Seattle, WA 98101",
       "isActive": true,
       "createdAt": "2024-02-15T11:00:00Z"
+    },
+    {
+      "name": "mohammad shahabi",
+      "email": "mshshahabi55@gmail.com",
+      "phone": "0449538728",
+      "company": "free",
+      "address": "Palosaarentie",
+      "isActive": true,
+      "createdAt": "2026-07-05T09:53:11.147Z",
+      "id": "SgO13susfRI"
     }
   ],
   "products": [
@@ -156,5 +166,6 @@
         ]
       }
     ]
-  }
+  },
+  "$schema": "./node_modules/json-server/schema.json"
 }
