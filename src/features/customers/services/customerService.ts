@@ -6,6 +6,8 @@ import {
   CustomerQueryParams,
 } from "../types/customer.types";
 
+export type { Customer, CreateCustomerDto, UpdateCustomerDto, CustomerQueryParams };
+
 export interface JsonServerPagedResponse<T> {
   first: number;
   prev: number | null;
@@ -32,44 +34,44 @@ export const customerService = {
     const page = params?.page ?? 1;
     const limit = params?.limit ?? 10;
 
-   const queryParams: Record<string, unknown> = {
-  _page: page,
-  _per_page: limit,
-};
+    // ✅ ساخت پارامترها
+    const queryParams: Record<string, unknown> = {
+      _page: page,
+      _per_page: limit,
+    };
 
-if (params?.search && params.search.trim() !== "") {
-  queryParams.q = params.search.trim();
-}
+    // ✅ جستجو روی چند فیلد (name, email, company) هم‌زمان
+    // json-server v1 دیگه از q= یا name_like پشتیبانی نمی‌کنه.
+    // syntax درست: field:contains=value (case-insensitive)
+    // برای OR روی چند فیلد باید از _where استفاده کرد.
+    if (params?.search && params.search.trim() !== "") {
+      const searchTerm = params.search.trim();
 
-const response = await apiClient.get<JsonServerPagedResponse<any>>(
-  "/customers",
-  {
-    params: queryParams,
-  }
-);
-//     console.log("JSON SERVER RESPONSE", response.data);
-//     console.log("response.data.data =", response.data.data);
-// console.log("Array?", Array.isArray(response.data.data));
-// console.log("length =", response.data.data?.length);
-// console.log("items =", response.data.items);
+      queryParams['_where'] = JSON.stringify({
+        or: [
+          { name: { contains: searchTerm } },
+          { email: { contains: searchTerm } },
+          { company: { contains: searchTerm } },
+        ],
+      });
+    }
+
+    console.log('🔍 Search params:', queryParams);
+
+    const response = await apiClient.get<JsonServerPagedResponse<any>>(
+      "/customers",
+      {
+        params: queryParams,
+      }
+    );
+
+    console.log('📦 Response:', response.data);
 
     const customers: Customer[] = response.data.data.map((c: any) => ({
       ...c,
       id: Number(c.id),
     }));
-//     console.log("customers after map =", customers);
-//     console.log("Base URL =", apiClient.defaults.baseURL);
 
-// console.log(
-//   apiClient.getUri({
-//     url: "/customers",
-//     params: {
-//       _page: page,
-//       _per_page: limit,
-//       q: params?.search || "",
-//     },
-//   })
-// );
     return {
       data: customers,
       total: response.data.items,
@@ -79,8 +81,9 @@ const response = await apiClient.get<JsonServerPagedResponse<any>>(
     };
   },
 
-  async getById(id: number): Promise<Customer> {
-    const response = await apiClient.get<Customer>(`/customers/${id}`);
+  async getById(id: string | number): Promise<Customer> {
+    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+    const response = await apiClient.get<Customer>(`/customers/${numericId}`);
 
     return {
       ...response.data,
@@ -101,11 +104,11 @@ const response = await apiClient.get<JsonServerPagedResponse<any>>(
   },
 
   async update(
-    id: number,
+    id: string | number,
     data: UpdateCustomerDto
   ): Promise<Customer> {
-
-    const response = await apiClient.put<Customer>(`/customers/${id}`, {
+    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+    const response = await apiClient.put<Customer>(`/customers/${numericId}`, {
       ...data,
       updatedAt: new Date().toISOString(),
     });
@@ -116,13 +119,13 @@ const response = await apiClient.get<JsonServerPagedResponse<any>>(
     };
   },
 
-  async delete(id: number): Promise<void> {
-    await apiClient.delete(`/customers/${id}`);
+  async delete(id: string | number): Promise<void> {
+    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+    await apiClient.delete(`/customers/${numericId}`);
   },
 
   async toggleStatus(id: number): Promise<Customer> {
     const customer = await customerService.getById(id);
-
     return customerService.update(id, {
       isActive: !customer.isActive,
     });

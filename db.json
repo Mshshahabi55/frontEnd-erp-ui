@@ -11,24 +11,24 @@
       "createdAt": "2024-01-15T10:30:00Z"
     },
     {
+      "id": "2",
       "name": "Jane Smith",
       "email": "jane.smith@example.com",
       "phone": "+1987654321",
       "company": "TechCorp",
       "address": "456 Oak Avenue, Los Angeles, CA 90001",
-      "isActive": false,
-      "updatedAt": "2026-07-04T21:21:16.487Z",
-      "id": "2"
+      "isActive": true,
+      "createdAt": "2024-01-20T14:45:00Z"
     },
     {
+      "id": "3",
       "name": "Bob Johnson",
       "email": "bob.johnson@example.com",
       "phone": "+1122334455",
       "company": "Global Solutions",
       "address": "789 Pine Road, Chicago, IL 60601",
-      "isActive": true,
-      "updatedAt": "2026-07-04T21:21:10.398Z",
-      "id": "3"
+      "isActive": false,
+      "createdAt": "2024-02-01T09:15:00Z"
     },
     {
       "id": "4",
@@ -51,7 +51,80 @@
       "createdAt": "2024-02-15T11:00:00Z"
     }
   ],
-  "products": [],
+  "products": [
+    {
+      "id": "1",
+      "name": "Laptop Pro",
+      "sku": "LP-001",
+      "category": "Electronics",
+      "price": 1299.99,
+      "stock": 45,
+      "unit": "pcs",
+      "description": "High-performance laptop with 16GB RAM, 512GB SSD",
+      "isAvailable": true,
+      "createdAt": "2024-01-10T08:00:00Z"
+    },
+    {
+      "id": "2",
+      "name": "Wireless Mouse",
+      "sku": "WM-002",
+      "category": "Electronics",
+      "price": 29.99,
+      "stock": 120,
+      "unit": "pcs",
+      "description": "Ergonomic wireless mouse with Bluetooth 5.0",
+      "isAvailable": true,
+      "createdAt": "2024-01-12T09:30:00Z"
+    },
+    {
+      "id": "3",
+      "name": "Office Chair",
+      "sku": "OC-003",
+      "category": "Furniture",
+      "price": 249.99,
+      "stock": 18,
+      "unit": "pcs",
+      "description": "Ergonomic office chair with lumbar support",
+      "isAvailable": true,
+      "createdAt": "2024-01-20T10:15:00Z"
+    },
+    {
+      "id": "4",
+      "name": "Coffee Maker",
+      "sku": "CM-004",
+      "category": "Appliances",
+      "price": 89.99,
+      "stock": 0,
+      "unit": "pcs",
+      "description": "Programmable coffee maker with thermal carafe",
+      "isAvailable": false,
+      "createdAt": "2024-02-01T14:00:00Z"
+    },
+    {
+      "id": "5",
+      "name": "Notebook Set",
+      "sku": "NS-005",
+      "category": "Office Supplies",
+      "price": 15.99,
+      "stock": 200,
+      "unit": "set",
+      "description": "Set of 5 premium notebooks with leather cover",
+      "isAvailable": true,
+      "createdAt": "2024-02-10T11:45:00Z"
+    },
+    {
+      "name": "Mobile",
+      "sku": "test",
+      "category": "elctric",
+      "price": 2,
+      "stock": 1,
+      "unit": "set",
+      "description": "aa",
+      "isAvailable": false,
+      "createdAt": "2026-07-05T09:22:48.994Z",
+      "id": "OO4_cJS5qDs"
+    }
+  ],
   "orders": [],
   "auth": {
     "users": [
@@ -83,6 +156,5 @@
         ]
       }
     ]
-  },
-  "$schema": "./node_modules/json-server/schema.json"
+  }
 }

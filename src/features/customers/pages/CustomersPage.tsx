@@ -1,300 +1,194 @@
 import { useState } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Chip,
-  IconButton,
-  TextField,
-  InputAdornment,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  Alert,
-  Skeleton,
-} from '@mui/material';
-import { Search, Add, Edit, Delete, Refresh } from '@mui/icons-material';
-import {
-  useCustomers,
-  useDeleteCustomer,
-  useCreateCustomer,
-  useUpdateCustomer,
-} from '../hooks/useCustomers';
+import { Box, Typography, Button, Chip, IconButton, Dialog, DialogTitle, DialogContent } from '@mui/material';
+import { Edit, Delete, Add } from '@mui/icons-material';
+import { DataTable, Column } from '@/shared/components/DataTable/DataTable';
+import { SearchBar } from '@/shared/components/SearchBar/SearchBar';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/ConfirmDialog';
+import { useCrud } from '@/shared/hooks/useCrud';
 import { CustomerForm } from '../components/CustomerForm/CustomerForm';
-import { Customer } from '../types/customer.types';
+import { customerService } from '../services/customerService';
+import type { Customer } from '../types/customer.types';
 import { CreateCustomerFormData } from '../types/customer.schema';
+import { CreateCustomerDto, UpdateCustomerDto } from '../types/customer.types';
+import { useDebounce } from '@/shared/hooks/useDebounce';
 
 export const CustomersPage = () => {
-  // ===== State =====
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [search, setSearch] = useState('');
+  const [pageSize, setPageSize] = useState(10);
   const [searchInput, setSearchInput] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  // ===== Queries & Mutations =====
-  const { data, isLoading, error, refetch } = useCustomers({
+  const debouncedSearch = useDebounce(searchInput, 500);
+
+  const { useGetAll, useCreate, useUpdate, useDelete } = useCrud<
+    Customer,
+    CreateCustomerDto,
+    UpdateCustomerDto
+  >(
+    customerService,
+    ['customers']
+  );
+
+  const { data: response, isLoading, error, refetch } = useGetAll({
     page: page + 1,
-    limit: rowsPerPage,
-    search: search || undefined,
+    limit: pageSize,
+    search: debouncedSearch || undefined,
   });
 
-  /////////////////////
-//   console.log("========== CUSTOMERS PAGE ==========");
-// console.log("React Query data:", data);
-// console.log("React Query data.data:", data?.data);
-// console.log("Loading:", isLoading);
-// console.log("Error:", error);
-// console.log("====================================");
-  ////////////////////
+  // ✅ دیباگ: لاگ کردن داده‌ها
+  console.log('📊 Response:', response);
+  console.log('📊 Customers:', response?.data);
+  console.log('📊 Total:', response?.total);
+  console.log('📊 Loading:', isLoading);
+  console.log('📊 Error:', error);
 
-  const deleteMutation = useDeleteCustomer();
-  const createMutation = useCreateCustomer();
-  const updateMutation = useUpdateCustomer();
+  const customers = response?.data ?? [];
+  const totalCount = response?.total ?? 0;
 
-  // ===== Handlers =====
-  const handleSearch = () => {
-    setSearch(searchInput);
-    setPage(0);
-  };
-
-  const handleClearSearch = () => {
-    setSearchInput('');
-    setSearch('');
-    setPage(0);
-  };
+  const createMutation = useCreate();
+  const updateMutation = useUpdate();
+  const deleteMutation = useDelete();
 
   const handleCreate = () => {
     setSelectedCustomer(null);
-    setDialogOpen(true);
+    setIsFormOpen(true);
   };
 
   const handleEdit = (customer: Customer) => {
     setSelectedCustomer(customer);
-    setDialogOpen(true);
+    setIsFormOpen(true);
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this customer?')) {
-      deleteMutation.mutate(id);
+    const customer = customers.find((c: Customer) => c.id === id);
+    if (customer) {
+      setSelectedCustomer(customer);
+      setIsDeleteOpen(true);
     }
   };
 
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-    setSelectedCustomer(null);
-  };
-
-  const handleFormSubmit = async (data: CreateCustomerFormData) => {
+  const handleFormSubmit = async (formData: CreateCustomerFormData) => {
     if (selectedCustomer) {
-      // Update existing customer
       await updateMutation.mutateAsync({
         id: selectedCustomer.id,
         data: {
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          company: data.company || undefined,
-          address: data.address || undefined,
-          isActive: data.isActive,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          company: formData.company || undefined,
+          address: formData.address || undefined,
+          isActive: formData.isActive,
         },
       });
     } else {
-      // Create new customer
       await createMutation.mutateAsync({
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        company: data.company || undefined,
-        address: data.address || undefined,
-        isActive: data.isActive,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.company || undefined,
+        address: formData.address || undefined,
+        isActive: formData.isActive,
       });
     }
-    handleDialogClose();
+    setIsFormOpen(false);
+    setSelectedCustomer(null);
   };
 
-  // ===== Render Table =====
-  const renderTable = () => {
-    if (error) {
-      return (
-        <Alert
-          severity="error"
-          action={
-            <Button color="inherit" size="small" onClick={() => refetch()}>
-              <Refresh /> Retry
-            </Button>
-          }
-        >
-          Failed to load customers: {error.message}
-        </Alert>
-      );
+  const handleConfirmDelete = async () => {
+    if (selectedCustomer) {
+      await deleteMutation.mutateAsync(selectedCustomer.id);
+      setIsDeleteOpen(false);
+      setSelectedCustomer(null);
     }
-
-    // ✅ Safety: Ensure data and data.data exist
-   const customers = data?.data ?? [];
-   const totalCount = data?.total ?? 0;
-
-//   /////////////////////////
-//   console.log("customers =", customers);
-// console.log("customers.length =", customers.length);
-// console.log("totalCount =", totalCount);
-//   /////////////////////////
-    return (
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Phone</TableCell>
-              <TableCell>Company</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {isLoading ? (
-              // Skeleton Loading
-              Array.from({ length: rowsPerPage }).map((_, index) => (
-                <TableRow key={index}>
-                  <TableCell><Skeleton variant="text" width={120} /></TableCell>
-                  <TableCell><Skeleton variant="text" width={180} /></TableCell>
-                  <TableCell><Skeleton variant="text" width={120} /></TableCell>
-                  <TableCell><Skeleton variant="text" width={100} /></TableCell>
-                  <TableCell><Skeleton variant="text" width={80} /></TableCell>
-                  <TableCell><Skeleton variant="text" width={100} /></TableCell>
-                </TableRow>
-              ))
-            ) : customers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                  <Typography color="text.secondary">
-                    No customers found. Create your first customer!
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              customers.map((customer) => (
-                <TableRow key={customer.id} hover>
-                  <TableCell sx={{ fontWeight: 500 }}>{customer.name}</TableCell>
-                  <TableCell>{customer.email}</TableCell>
-                  <TableCell>{customer.phone}</TableCell>
-                  <TableCell>{customer.company || '-'}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={customer.isActive ? 'Active' : 'Inactive'}
-                      color={customer.isActive ? 'success' : 'default'}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => handleEdit(customer)}
-                      title="Edit"
-                    >
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleDelete(customer.id)}
-                      disabled={deleteMutation.isPending}
-                      title="Delete"
-                    >
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        <TablePagination
-          component="div"
-          count={totalCount}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={(_, newPage) => setPage(newPage)}
-          onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10));
-            setPage(0);
-          }}
-          labelRowsPerPage="Rows per page:"
-          labelDisplayedRows={({ from, to, count }) => `${from}-${to} of ${count}`}
-          rowsPerPageOptions={[5, 10, 25, 50]}
-        />
-      </TableContainer>
-    );
   };
 
-  // ===== Main Render =====
+  const columns: Column<Customer>[] = [
+    {
+      key: 'name',
+      label: 'Name',
+      render: (value: string) => <Typography sx={{ fontWeight: 500 }}>{value}</Typography>,
+    },
+    { key: 'email', label: 'Email' },
+    { key: 'phone', label: 'Phone' },
+    {
+      key: 'company',
+      label: 'Company',
+      render: (value: string) => value || '-',
+    },
+    {
+      key: 'isActive',
+      label: 'Status',
+      render: (value: boolean) => (
+        <Chip
+          label={value ? 'Active' : 'Inactive'}
+          color={value ? 'success' : 'default'}
+          size="small"
+        />
+      ),
+    },
+    {
+      key: 'id',
+      label: 'Actions',
+      align: 'right',
+      render: (_, row) => (
+        <>
+          <IconButton
+            size="small"
+            color="primary"
+            onClick={() => handleEdit(row)}
+            title="Edit"
+          >
+            <Edit />
+          </IconButton>
+          <IconButton
+            size="small"
+            color="error"
+            onClick={() => handleDelete(row.id)}
+            disabled={deleteMutation.isPending}
+            title="Delete"
+          >
+            <Delete />
+          </IconButton>
+        </>
+      ),
+    },
+  ];
+
   return (
     <Box>
-      {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" sx={{ fontWeight: 700 }}>
           Customers
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleCreate}
-        >
+        <Button variant="contained" startIcon={<Add />} onClick={handleCreate}>
           Add Customer
         </Button>
       </Box>
 
-      {/* Search Bar */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-        <TextField
-          placeholder="Search by name, email, or company..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-              endAdornment: searchInput && (
-                <InputAdornment position="end">
-                  <IconButton size="small" onClick={handleClearSearch}>
-                    <Refresh />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            },
-          }}
-          fullWidth
-        />
-        <Button variant="outlined" onClick={handleSearch}>
-          Search
-        </Button>
-      </Box>
+      <SearchBar
+        value={searchInput}
+        onChange={setSearchInput}
+        onClear={() => setSearchInput('')}
+        placeholder="Search by name, email, or company..."
+      />
 
-      {/* Table */}
-      {renderTable()}
+      <DataTable
+        columns={columns}
+        data={customers}
+        loading={isLoading}
+        error={error}
+        totalCount={totalCount}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        onRetry={refetch}
+        emptyMessage="No customers found. Create your first customer!"
+      />
 
-      {/* Form Dialog */}
-      <Dialog
-        open={dialogOpen}
-        onClose={handleDialogClose}
-        maxWidth="sm"
-        fullWidth
-      >
+      <Dialog open={isFormOpen} onClose={() => setIsFormOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>
           {selectedCustomer ? 'Edit Customer' : 'Add New Customer'}
         </DialogTitle>
@@ -315,10 +209,21 @@ export const CustomersPage = () => {
             onSubmit={handleFormSubmit}
             isLoading={createMutation.isPending || updateMutation.isPending}
             submitText={selectedCustomer ? 'Update Customer' : 'Save Customer'}
-            onCancel={handleDialogClose}
+            onCancel={() => setIsFormOpen(false)}
           />
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={isDeleteOpen}
+        title="Delete Customer"
+        message={`Are you sure you want to delete "${selectedCustomer?.name}"?`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setIsDeleteOpen(false)}
+        loading={deleteMutation.isPending}
+      />
     </Box>
   );
 };
